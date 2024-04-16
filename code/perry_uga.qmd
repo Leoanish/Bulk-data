@@ -1,0 +1,274 @@
+---
+title: "Perry UGA"
+format: html
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(sf)
+library(stars)
+library(raster)
+library(mapview)
+library(ggplot2) 
+library(janitor)
+library(purrr)
+library(patchwork)
+library(ggthemes)
+```
+
+```{r 2020}
+perry_2020 <- list()
+
+files_2020 <- list.files(path = "../data/Perry_2020/", pattern = "*.tif", full.names = T) 
+
+file_2020_name <- list.files(path = "../data/Perry_2020/", pattern = "*.tif", full.names = F) 
+```
+
+```{r}
+df_2020 <- data.frame(file_path = files_2020,
+                      file_name = tools::file_path_sans_ext(basename(file_2020_name)))
+
+df_2020 <- df_2020 %>% 
+  mutate(date = as.Date(substr(file_name, 1, 8), format = "%Y%m%d")) %>% 
+  mutate(images = map(file_path,
+                      ~read_stars(.x))) %>% 
+  dplyr::select(date, images)
+```
+
+```{r}
+df_2020 <- df_2020 %>% 
+  distinct(date, .keep_all = T) %>% 
+  mutate(ggplots = map2(images, date, ~ ggplot()+
+                          geom_stars(data = .x)+
+                          labs(title = .y)+
+                          scale_fill_viridis_c(option = "H",
+                                               name = "NDVI",
+                                               na.value = "transparent",
+                                               limits = c(0.2,1),
+                                               breaks = seq(0,1,0.1))+
+                          coord_equal()+
+                          theme_map()+
+                          theme(plot.title = element_text(hjust = 0.5, size = 7, face = "bold"),
+                                plot.background = element_blank(),
+                                panel.background = element_blank())),
+         na_value = map_dbl(images,
+                        ~.x %>% 
+                          st_as_sf(.) %>% 
+                          nrow(.))) %>% 
+  filter(na_value > 7500)
+
+```
+
+```{r}
+ts_2020 <- wrap_plots(df_2020$ggplots, ncol = 7, guides = "collect")
+```
+
+```{r}
+ggsave(plot = ts_2020, path = "../output/",filename = "perry_ts_2020.png",
+       height = 9,
+       width = 18,
+       dpi = 600)
+```
+
+
+
+
+
+
+```{r}
+# for (i in 1:length(files_2020)) {
+#   file_name <- files_2020[i]
+#   object_name <- paste0("perry_", i)
+#   perry_2020[[object_name]] <- read_stars(file_name) %>% 
+#     rename(tif_i = colnames(.[[1]]))
+#   
+# }
+```
+
+```{r}
+first_five <- perry_2020[1:5]
+
+one <- first_five$perry_1
+
+ggplot()+
+  geom_stars(data = one) +
+  coord_equal()
+  
+
+map(first_five,
+    ~ ggplot()+
+      geom_stars(data = .x)+
+      scale_fill_viridis_c(option = "H"))
+```
+```{r 2021}
+perry_2021 <- list()
+
+files_2021 <- list.files(path = "../data/Perry_2021/", pattern = "*.tif", full.names = T) 
+
+file_2021_name <- list.files(path = "../data/Perry_2021/", pattern = "*.tif", full.names = F) 
+```
+
+```{r}
+df_2021 <- data.frame(file_path = files_2021,
+                      file_name = tools::file_path_sans_ext(basename(file_2021_name)))
+
+df_2021 <- df_2021 %>% 
+  mutate(date = as.Date(substr(file_name, 1, 8), format = "%Y%m%d")) %>% 
+  mutate(images = map(file_path,
+                      ~read_stars(.x))) %>% 
+  dplyr::select(date, images)
+```
+
+```{r}
+df_2021 <- df_2021 %>% 
+  distinct(date, .keep_all = T) %>% 
+  mutate(ggplots = map2(images, date, ~ ggplot()+
+                          geom_stars(data = .x)+
+                          labs(title = .y)+
+                          scale_fill_viridis_c(option = "H",
+                                               name = "NDVI",
+                                               na.value = "transparent",
+                                               limits = c(0.1,0.9),
+                                               breaks = seq(0,1,0.1))+
+                          coord_equal()+
+                          theme_map()+
+                          theme(plot.title = element_text(hjust = 0.5, size = 7, face = "bold"),
+                                plot.background = element_blank(),
+                                panel.background = element_blank(),
+                                legend.position = "right")),
+         na_value = map_dbl(images,
+                        ~.x %>% 
+                          st_as_sf(.) %>% 
+                          nrow(.))) %>% 
+  filter(na_value > 7500)
+
+```
+
+```{r}
+ts_2021 <- wrap_plots(df_2021$ggplots, ncol = 8) + plot_layout(guides = "collect")
+```
+
+```{r}
+ggsave(plot = ts_2021, path = "../output/",filename = "perry_ts_2021.png",
+       height = 9,
+       width = 18,
+       dpi = 600)
+```
+
+
+```{r 2022}
+perry_2022 <- list()
+
+files_2022 <- list.files(path = "../data/Perry_2022/", pattern = "*.tif", full.names = T) 
+
+file_2022_name <- list.files(path = "../data/Perry_2022/", pattern = "*.tif", full.names = F) 
+```
+
+
+```{r}
+df_2022 <- data.frame(file_path = files_2022,
+                      file_name = tools::file_path_sans_ext(basename(file_2022_name)))
+
+df_2022 <- df_2022 %>% 
+  mutate(date = as.Date(substr(file_name, 1, 8), format = "%Y%m%d")) %>% 
+  mutate(images = map(file_path,
+                      ~read_stars(.x))) %>% 
+  dplyr::select(date, images)
+```
+
+```{r}
+df_2022 <- df_2022 %>% 
+  distinct(date, .keep_all = T) %>% 
+  mutate(ggplots = map2(images, date, ~ ggplot()+
+                          geom_stars(data = .x)+
+                          labs(title = .y)+
+                          scale_fill_viridis_c(option = "H",
+                                               name = "NDVI",
+                                               na.value = "transparent",
+                                               limits = c(0,1),
+                                               breaks = seq(0,1,0.1))+
+                          coord_equal()+
+                          theme_map()+
+                          theme(plot.title = element_text(hjust = 0.5, size = 7, face = "bold"),
+                                plot.background = element_blank(),
+                                panel.background = element_blank(),
+                                legend.position = "right")),
+         na_value = map_dbl(images,
+                        ~.x %>% 
+                          st_as_sf(.) %>% 
+                          nrow(.))) %>% 
+  filter(na_value > 7500)
+
+
+df_2022
+```
+
+```{r}
+ts_2022 <- wrap_plots(df_2022$ggplots, ncol = 8) + plot_layout(guides = "collect")
+```
+
+```{r}
+ggsave(plot = ts_2022, path = "../output/",filename = "perry_ts_2022.png",
+       height = 9,
+       width = 18,
+       dpi = 600)
+```
+
+
+```{r 2023}
+perry_2023 <- list()
+
+files_2023 <- list.files(path = "../data/Perry_2023/", pattern = "*.tif", full.names = T) 
+
+file_2023_name <- list.files(path = "../data/Perry_2023/", pattern = "*.tif", full.names = F) 
+```
+
+
+```{r}
+df_2023 <- data.frame(file_path = files_2023,
+                      file_name = tools::file_path_sans_ext(basename(file_2023_name)))
+
+df_2023 <- df_2023 %>% 
+  mutate(date = as.Date(substr(file_name, 1, 8), format = "%Y%m%d")) %>% 
+  mutate(images = map(file_path,
+                      ~read_stars(.x))) %>% 
+  dplyr::select(date, images)
+```
+
+```{r}
+df_2023 <- df_2023 %>% 
+  distinct(date, .keep_all = T) %>% 
+  mutate(ggplots = map2(images, date, ~ ggplot()+
+                          geom_stars(data = .x)+
+                          labs(title = .y)+
+                          scale_fill_viridis_c(option = "H",
+                                               name = "NDVI",
+                                               na.value = "transparent",
+                                               limits = c(0,1),
+                                               breaks = seq(0,1,0.1))+
+                          coord_equal()+
+                          theme_map()+
+                          theme(plot.title = element_text(hjust = 0.5, size = 7, face = "bold"),
+                                plot.background = element_blank(),
+                                panel.background = element_blank(),
+                                legend.position = "right")),
+         na_value = map_dbl(images,
+                        ~.x %>% 
+                          st_as_sf(.) %>% 
+                          nrow(.))) %>% 
+  filter(na_value > 7500)
+
+```
+
+```{r}
+ts_2023 <- wrap_plots(df_2023$ggplots, ncol = 7) + plot_layout(guides = "collect")
+```
+
+```{r}
+ggsave(plot = ts_2023, path = "../output/",filename = "perry_ts_2023.png",
+       height = 9,
+       width = 18,
+       dpi = 600)
+```
